@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>From Stumbling to Speaking</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="stage"><canvas id="screen" width="160" height="144" aria-label="Game screen: a Game Boy-style adventure about learning to speak with confidence"></canvas></main>
+<div id="pad" aria-label="On-screen controls">
+  <div class="dpad">
+    <button data-key="up" class="up" aria-label="Up">&#9650;</button>
+    <button data-key="left" class="left" aria-label="Left">&#9664;</button>
+    <button data-key="right" class="right" aria-label="Right">&#9654;</button>
+    <button data-key="down" class="down" aria-label="Down">&#9660;</button>
+  </div>
+  <div class="mid">
+    <button data-key="select" aria-label="Select">SELECT</button>
+    <button data-key="start" aria-label="Start">START</button>
+  </div>
+  <div class="ab">
+    <button data-key="b" class="b" aria-label="B">B</button>
+    <button data-key="a" class="a" aria-label="A">A</button>
+  </div>
+</div>
+<script src="src/input.js"></script>
+<script src="src/gfx.js"></script>
+<script src="src/world.js"></script>
+<script src="src/story.js"></script>
+<script src="src/minigames.js"></script>
+<script src="src/game.js"></script>
+<script src="src/audio.js"></script>
+<script src="src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!doctype html>
+<!-- Real-browser test page. Open /tests/play.html#best | #idle | #keys (served over HTTP; reports with POST /report). -->
+<meta charset="utf-8">
+<style>body{margin:0;background:#0f380f}canvas{image-rendering:pixelated}</style>
+<canvas id="screen" width="160" height="144"></canvas>
+<div id="pad"></div>
+<script>try { localStorage.clear(); if (location.hash === '#cont') localStorage.setItem('tm-gb-save', JSON.stringify({ v: 1, s: { map: 'club', x: 10, y: 14, dir: 'up', step: 3, got: {}, conf: 42, flags: {}, talk: {} } })); } catch (e) {}</script>
+<script src="../src/input.js"></script><script src="../src/gfx.js"></script><script src="../src/world.js"></script>
+<script src="../src/story.js"></script><script src="../src/minigames.js"></script><script src="../src/game.js"></script>
+<script src="../src/audio.js"></script><script src="../src/main.js"></script><script src="bots.js"></script>
+<script>
+(() => {
+  const G = globalThis.G, g = window.__game, mode = location.hash.slice(1) || 'best', errs = [];
+  window.onerror = m => errs.push(String(m));
+  const report = extra => fetch('/report', { method: 'POST', body: JSON.stringify({ mode, mode_: g.mode, conf: g.s.conf, ending: g.s.flags.ending, breathed: g.s.flags.breathed, step: g.s.step, map: g.s.map, errs, ...extra }) });
+  if (mode === 'cont' || mode === 'fresh') {   // title -> Enter: Continue resumes the save; a fresh start shows the how-to-play hint
+    const key = (t, k) => dispatchEvent(new KeyboardEvent(t, { key: k, bubbles: true }));
+    setTimeout(() => { key('keydown', 'Enter'); setTimeout(() => key('keyup', 'Enter'), 100); }, 300);
+    setTimeout(() => report({ hint: g.box ? g.box.pages.flat().join(' ') : null }), 1200);
+    return;
+  }
+  if (mode === 'keys') {                    // the real keyboard path: Enter starts, ArrowUp walks
+    const key = (t, k) => dispatchEvent(new KeyboardEvent(t, { key: k, bubbles: true }));
+    setTimeout(() => { key('keydown', 'Enter'); setTimeout(() => key('keyup', 'Enter'), 100); }, 300);
+    setTimeout(() => { key('keydown', 'ArrowUp'); }, 700);
+    setTimeout(() => { key('keyup', 'ArrowUp'); report({ y: g.s.y, startY: 8, canvasPx: document.getElementById('screen').style.width }); }, 2200);
+    return;
+  }
+  // frame-synchronous bot: replaces the real input but keeps the real loop, draw and scaling code
+  const orig = g.update; let prev = {}, frames = 0;
+  const idle = mode === 'idle', scr = new G.gfx.Screen(), px = new Uint8ClampedArray(160 * 144 * 4);
+  g.update = inp => {
+    const tap = frames++ % 2 === 0; let held = {};
+    switch (g.mode) {
+      case 'title': held = tap ? { start: true } : {}; break;
+      case 'say': case 'cut': held = tap ? { a: true } : {}; break;
+      case 'play': held = G.bots.overworld(g, tap); break;
+      case 'minigame': held = idle ? {} : G.bots.minigame(g.mg, tap); break;
+    }
+    const f = G.Input.frame(held, prev); prev = held; orig(f);
+    if (frames % 240 === 0) { g.draw(scr); G.gfx.toRGBA(scr, px); }           // exercise drawing along the way
+    if (g.mode === 'end' && !g.reported) { g.reported = true; g.draw(scr); report({ frames }); }
+  };
+  // run ahead in a tight loop so a full game takes seconds, not minutes
+  setTimeout(() => { let n = 0; while (g.mode !== 'end' && n++ < 40000) g.update({}); }, 200);
+})();
+</script>
